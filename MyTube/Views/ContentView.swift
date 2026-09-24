@@ -121,7 +121,7 @@ struct ContentView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         Button(action: {
-                            webURL = "https://m.youtube.com/feed/trending"
+                            webURL = "https://m.youtube.com/results?search_query=th%E1%BB%8Bnh+h%C3%A0nh"
                         }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "flame.fill")
@@ -137,7 +137,7 @@ struct ContentView: View {
                         }
                         
                         Button(action: {
-                            webURL = "https://m.youtube.com/feed/trending?bp=4gINGgt5dG1hX2NoYXJ0cw%3D%3D"
+                            webURL = "https://m.youtube.com/results?search_query=nhac+tre+remix"
                         }) {
                             HStack(spacing: 4) {
                                 Image(systemName: "music.note")
@@ -213,8 +213,10 @@ struct ContentView: View {
                     canGoBack: $canGoBack,
                     canGoForward: $canGoForward,
                     isLoading: $isLoading,
-                    onNavigation: { _ in
-                        webManager.checkLoginStatus()
+                    onNavigation: { url in
+                        if url.contains("accounts.google") || url.contains("signin") {
+                            webManager.checkLoginStatus()
+                        }
                     }
                 )
             }

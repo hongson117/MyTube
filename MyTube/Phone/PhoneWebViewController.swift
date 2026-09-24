@@ -28,6 +28,7 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
         webView.uiDelegate = context.coordinator
         
         context.coordinator.webView = webView
+        context.coordinator.lastLoadedURL = currentURL
         
         if let url = URL(string: currentURL) {
             webView.load(URLRequest(url: url))
@@ -36,8 +37,9 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        // If currentURL changed externally and differs from webview URL, load it
-        if let target = URL(string: currentURL), uiView.url?.absoluteString != currentURL, !context.coordinator.isInternalNavigation {
+        // Only load if currentURL was updated from SwiftUI and differs from what was last loaded
+        if let target = URL(string: currentURL), currentURL != context.coordinator.lastLoadedURL {
+            context.coordinator.lastLoadedURL = currentURL
             uiView.load(URLRequest(url: target))
         }
     }
@@ -45,7 +47,7 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         var parent: PhoneWebViewRepresentable
         weak var webView: WKWebView?
-        var isInternalNavigation: Bool = false
+        var lastLoadedURL: String?
         
         init(_ parent: PhoneWebViewRepresentable) {
             self.parent = parent
@@ -63,12 +65,12 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
                 self.parent.canGoBack = webView.canGoBack
                 self.parent.canGoForward = webView.canGoForward
                 if let urlStr = webView.url?.absoluteString {
-                    self.isInternalNavigation = true
-                    self.parent.currentURL = urlStr
+                    self.lastLoadedURL = urlStr
+                    if self.parent.currentURL != urlStr {
+                        self.parent.currentURL = urlStr
+                    }
                     self.parent.onNavigation?(urlStr)
-                    self.isInternalNavigation = false
                 }
-                MyTubeWebManager.shared.checkLoginStatus()
             }
         }
         

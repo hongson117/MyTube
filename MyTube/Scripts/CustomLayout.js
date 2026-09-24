@@ -58,49 +58,46 @@
     `;
     document.head.appendChild(style);
 
-    // 2. Tự Động Chuyển Sang Trending (Thịnh Hành) Nếu Trang Chủ Trống
-    function checkAndRedirectEmptyHome() {
+    // 2. Trang Trí Khối Trang Chủ Trống (Không Reload Gây Nhấp Nháy)
+    function enhanceEmptyState() {
         const path = window.location.pathname;
         if (path === '/' || path === '') {
-            const bodyText = (document.body && document.body.innerText) ? document.body.innerText : '';
-            const isEmptyPrompt = bodyText.includes('Thử tìm kiếm để bắt đầu') || 
-                                  bodyText.includes('Try searching to get started') ||
-                                  bodyText.includes('Hãy bắt đầu xem video');
-            
-            if (isEmptyPrompt) {
-                console.log('[MyTube] Phát hiện trang chủ trống (chưa có lịch sử), tự động chuyển sang Trending...');
-                window.location.replace('https://m.youtube.com/feed/trending');
-                return;
-            }
-
-            // Kiểm tra xem sau khi tải có video nào không
-            setTimeout(() => {
-                if (window.location.pathname === '/' || window.location.pathname === '') {
-                    const videoItems = document.querySelectorAll('ytm-media-item, ytm-video-with-context-renderer, ytm-compact-video-renderer, ytm-rich-item-renderer');
-                    const text = (document.body && document.body.innerText) ? document.body.innerText : '';
-                    if (videoItems.length === 0 && (text.includes('Thử tìm kiếm') || text.includes('Try searching') || text.includes('bắt đầu xem video'))) {
-                        console.log('[MyTube] Xác nhận trang chủ trống, nạp ngay Video Thịnh Hành...');
-                        window.location.replace('https://m.youtube.com/feed/trending');
+            const emptyContainer = document.querySelector('ytm-browse-response[rendered-from-cache], ytm-section-list-renderer');
+            if (emptyContainer && !document.getElementById('mytube-empty-helper')) {
+                const bodyText = (document.body && document.body.innerText) ? document.body.innerText : '';
+                if (bodyText.includes('Thử tìm kiếm để bắt đầu') || bodyText.includes('Try searching to get started') || bodyText.includes('bắt đầu xem video')) {
+                    const helper = document.createElement('div');
+                    helper.id = 'mytube-empty-helper';
+                    helper.style.cssText = 'margin: 20px auto; max-width: 340px; text-align: center; padding: 16px; background: #1a1a1a; border-radius: 16px; border: 1px solid #333;';
+                    helper.innerHTML = `
+                        <p style="color: #eee; font-size: 14px; margin-bottom: 12px; font-weight: 500;">
+                            💡 Chưa có lịch sử xem? Chọn ngay nội dung bạn thích:
+                        </p>
+                        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                            <a href="/results?search_query=th%E1%BB%8Bnh+h%C3%A0nh" style="display: inline-block; background: #e50914; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: bold;">
+                                🔥 Thịnh Hành
+                            </a>
+                            <a href="/results?search_query=nhac+tre+remix" style="display: inline-block; background: #272727; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1px solid #444;">
+                                🎵 Nhạc Trẻ
+                            </a>
+                        </div>
+                    `;
+                    const promptBox = document.querySelector('.yt-spec-button-shape-next, ytm-message-renderer');
+                    if (promptBox && promptBox.parentNode) {
+                        promptBox.parentNode.insertBefore(helper, promptBox.nextSibling);
                     }
                 }
-            }, 800);
+            }
         }
     }
 
-    // 3. Quan sát tải trang để tự động phát hiện trang chủ trống
+    // 3. Quan sát DOM an toàn (không reload lặp lại)
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkAndRedirectEmptyHome);
+        document.addEventListener('DOMContentLoaded', enhanceEmptyState);
     } else {
-        checkAndRedirectEmptyHome();
+        enhanceEmptyState();
     }
 
-    // Theo dõi chuyển trang Single Page App
-    let lastUrl = location.href;
-    setInterval(() => {
-        if (location.href !== lastUrl) {
-            lastUrl = location.href;
-            checkAndRedirectEmptyHome();
-        }
-    }, 600);
+    setTimeout(enhanceEmptyState, 1000);
 
 })();

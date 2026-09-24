@@ -24,9 +24,9 @@ class MyTubeWebManager: ObservableObject {
         checkLoginStatus()
     }
     
-    /// Default starting URL: If not logged in, starts with Trending to prevent empty home feed
+    /// Default starting URL: If not logged in, starts with Trending search to prevent empty home feed
     var initialHomeURL: String {
-        return isLoggedIn ? "https://m.youtube.com/" : "https://m.youtube.com/feed/trending"
+        return isLoggedIn ? "https://m.youtube.com/" : "https://m.youtube.com/results?search_query=th%E1%BB%8Bnh+h%C3%A0nh"
     }
     
     func createPhoneConfiguration() -> WKWebViewConfiguration {
@@ -93,7 +93,9 @@ class MyTubeWebManager: ObservableObject {
                 (cookie.name == "LOGIN_INFO" || cookie.name == "SAPISID" || cookie.name == "SSID" || cookie.name == "SID")
             }
             DispatchQueue.main.async {
-                self.isLoggedIn = hasAuth
+                if self.isLoggedIn != hasAuth {
+                    self.isLoggedIn = hasAuth
+                }
                 completion?(hasAuth)
             }
         }
