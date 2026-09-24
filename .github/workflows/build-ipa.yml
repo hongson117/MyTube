@@ -88,13 +88,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cat << 'EOF' > release_notes.md
+          ### 🚀 My Tube for iOS & Apple CarPlay (Phương Án A: Full Video Player)
+          - **Xem Video YouTube Toàn Màn Hình Trên Xe Ô Tô:** Hỗ trợ điều khiển cảm ứng trực tiếp trên màn hình taplo ô tô.
+          - **100% Chặn Quảng Cáo (AdBlock):** Tự động bỏ qua video ads pre-roll / mid-roll và xóa toàn bộ banner quảng cáo.
+          - **Tích Hợp SponsorBlock:** Tự động nhảy qua các đoạn quảng cáo tài trợ, intro kênh, lời nhắc đăng ký.
+          - **Bàn Phím Cảm Ứng Ô Tô:** Bàn phím ảo trực tiếp trên taplo để tìm kiếm bài hát, video mà không cần chạm điện thoại.
+          - **Âm Thanh Nền Không Gián Đoạn:** Âm thanh phát mượt mà qua loa ô tô khi tắt màn hình điện thoại hoặc khóa phím.
+          - **Cài Đặt:** Hỗ trợ cài qua TrollStore (file .tipa / .ipa) hoặc ký bằng chứng chỉ cá nhân/doanh nghiệp có hỗ trợ CarPlay (file .ipa qua Sideloadly / AltStore / Esign / Scarlet).
+          EOF
           TAG_NAME="v1.0.0-${{ github.run_number }}"
           gh release create "$TAG_NAME" build/MyTube.ipa build/MyTube.tipa \
             --title "My Tube v1.0.0 - Build #${{ github.run_number }} (CarPlay Full Video & TizenTube Experience)" \
-            --notes "### 🚀 My Tube for iOS & Apple CarPlay (Phương Án A: Full Video Player)
-- **Xem Video YouTube Toàn Màn Hình Trên Xe Ô Tô:** Hỗ trợ điều khiển cảm ứng trực tiếp trên màn hình taplo ô tô.
-- **100% Chặn Quảng Cáo (AdBlock):** Tự động bỏ qua video ads pre-roll / mid-roll và xóa toàn bộ banner quảng cáo.
-- **Tích Hợp SponsorBlock:** Tự động nhảy qua các đoạn quảng cáo tài trợ, intro kênh, lời nhắc đăng ký.
-- **Bàn Phím Cảm Ứng Ô Tô:** Bàn phím ảo trực tiếp trên taplo để tìm kiếm bài hát, video mà không cần chạm điện thoại.
-- **Âm Thanh Nền Không Gián Đoạn:** Âm thanh phát mượt mà qua loa ô tô khi tắt màn hình điện thoại hoặc khóa phím.
-- **Cài Đặt:** Hỗ trợ cài qua **TrollStore** (file .tipa / .ipa) hoặc ký bằng chứng chỉ cá nhân/doanh nghiệp có hỗ trợ CarPlay (file .ipa qua Sideloadly / AltStore / Esign / Scarlet)."
+            --notes-file release_notes.md
