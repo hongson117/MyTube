@@ -47,52 +47,11 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     // MARK: - Setup Components
     private func setupWebView() {
-        let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.allowsInlineMediaPlayback = true
-        webConfiguration.mediaTypesRequiringUserActionForPlayback = []
-        webConfiguration.allowsPictureInPictureMediaPlayback = true
-        webConfiguration.allowsAirPlayForMediaPlayback = true
-        
-        // Scripts configuration
-        let sponsorBlockOn = UserDefaults.standard.object(forKey: "SponsorBlockOn") == nil ? true : UserDefaults.standard.bool(forKey: "SponsorBlockOn")
-        let adBlockerOn = UserDefaults.standard.object(forKey: "AdBlockerOn") == nil ? true : UserDefaults.standard.bool(forKey: "AdBlockerOn")
-        let ageRestrictBypassOn = UserDefaults.standard.bool(forKey: "AgeRestrictBypassOn")
-        
-        var scriptsToInject: [String] = []
-        if sponsorBlockOn { scriptsToInject.append("SponsorBlock") }
-        if ageRestrictBypassOn { scriptsToInject.append("AgeRestrictBypass") }
-        if adBlockerOn { scriptsToInject.append("AdBlocker") }
-        scriptsToInject.append("CustomLayout")
-        
-        for scriptName in scriptsToInject {
-            if let scriptPath = Bundle.main.path(forResource: scriptName, ofType: "js"),
-               let scriptSource = try? String(contentsOfFile: scriptPath) {
-                let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
-                webConfiguration.userContentController.addUserScript(userScript)
-            }
-        }
-        
-        // Custom Zoom & UI Optimization for In-Car Dashboard
-        let zoomVal = UserDefaults.standard.integer(forKey: "Zoom") == 0 ? 80 : UserDefaults.standard.integer(forKey: "Zoom")
-        let zoomScale = Double(zoomVal) / 100.0
-        let zoomScript = """
-        let meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'initial-scale=\(zoomScale), maximum-scale=\(zoomScale), user-scalable=no';
-        document.head.appendChild(meta);
-        let css = document.createElement('style');
-        css.type = 'text/css';
-        css.innerHTML = '.open-app-button, ytm-pivot-bar-renderer { display: none !important; }';
-        document.head.appendChild(css);
-        """
-        webConfiguration.userContentController.addUserScript(
-            WKUserScript(source: zoomScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        )
-        
-        // Keyboard bridge
+        let webConfiguration = MyTubeWebManager.shared.createConfiguration()
         webConfiguration.userContentController.add(self, name: "keyboard")
         
         webView = WKWebView(frame: view.bounds, configuration: webConfiguration)
+        webView.customUserAgent = MyTubeWebManager.shared.safariUserAgent
         webView.allowsLinkPreview = false
         webView.allowsBackForwardNavigationGestures = true
         webView.scrollView.minimumZoomScale = 1
@@ -115,6 +74,8 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     private func setupNoSleep() {
         let noSleepConfig = WKWebViewConfiguration()
+        noSleepConfig.processPool = MyTubeWebManager.shared.processPool
+        noSleepConfig.websiteDataStore = MyTubeWebManager.shared.dataStore
         if let scriptPath = Bundle.main.path(forResource: "NoSleepEnable", ofType: "js"),
            let scriptSource = try? String(contentsOfFile: scriptPath) {
             let userScript = WKUserScript(source: scriptSource, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
@@ -311,5 +272,9 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
             }
         }
         return nil
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        MyTubeWebManager.shared.checkLoginStatus()
     }
 }

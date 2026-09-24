@@ -38,7 +38,7 @@ struct MyTubeApp: App {
             "AdBlockerOn": true,
             "SponsorBlockOn": true,
             "AgeRestrictBypassOn": true,
-            "Zoom": 80,
+            "Zoom": 100,
             "ScreenPersistenceOn": true,
             "LockScreenDimmingOn": true
         ])

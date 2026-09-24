@@ -6,15 +6,51 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @ObservedObject private var webManager = MyTubeWebManager.shared
+    
     @AppStorage("AdBlockerOn") private var adBlockerOn: Bool = true
     @AppStorage("SponsorBlockOn") private var sponsorBlockOn: Bool = true
     @AppStorage("AgeRestrictBypassOn") private var ageRestrictBypassOn: Bool = true
-    @AppStorage("Zoom") private var zoom: Int = 80
+    @AppStorage("Zoom") private var zoom: Int = 100
     @AppStorage("ScreenPersistenceOn") private var screenPersistenceOn: Bool = true
     @AppStorage("LockScreenDimmingOn") private var lockScreenDimmingOn: Bool = true
     
+    @State private var showLogoutSuccess: Bool = false
+    
     var body: some View {
         Form {
+            Section(header: Text("Tài Khoản Google & Đồng Bộ CarPlay")) {
+                HStack {
+                    Image(systemName: "person.crop.circle.badge.checkmark")
+                        .font(.title2)
+                        .foregroundColor(webManager.isLoggedIn ? .green : .gray)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(webManager.isLoggedIn ? "Đã Đăng Nhập Tài Khoản Google" : "Chưa Đăng Nhập")
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                        Text(webManager.isLoggedIn ? "Kênh đăng ký, Lịch sử xem và Playlist đang đồng bộ tự động với màn hình xe hơi." : "Hãy đăng nhập tại Tab YouTube trên điện thoại để đồng bộ sang xe.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+                
+                if webManager.isLoggedIn {
+                    Button(action: {
+                        webManager.logout {
+                            showLogoutSuccess = true
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.right.square")
+                            Text("Đăng Xuất Tài Khoản Google")
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundColor(.red)
+                    }
+                }
+            }
+            
             Section(header: Text("Tính Năng TizenTube & AdBlock")) {
                 Toggle(isOn: $adBlockerOn) {
                     HStack {
@@ -71,8 +107,8 @@ struct SettingsView: View {
                     Slider(value: Binding(
                         get: { Double(zoom) },
                         set: { zoom = Int($0) }
-                    ), in: 60...120, step: 5)
-                    Text("Khuyến nghị: 80% cho màn hình 7 - 10 inch, 90% cho màn hình 12+ inch.")
+                    ), in: 80...130, step: 5)
+                    Text("Khuyến nghị: 100% cho hình ảnh chuẩn rõ nét, 115% cho chữ to dễ bấm trên xe.")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -124,6 +160,9 @@ struct SettingsView: View {
         }
         .navigationTitle("Cài Đặt My Tube")
         .navigationBarTitleDisplayMode(.inline)
+        .alert(isPresented: $showLogoutSuccess) {
+            Alert(title: Text("Đã Đăng Xuất"), message: Text("Dữ liệu đăng nhập đã được xóa. Bạn có thể đăng nhập tài khoản khác."), dismissButton: .default(Text("OK")))
+        }
     }
 }
 

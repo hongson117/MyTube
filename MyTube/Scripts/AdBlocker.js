@@ -319,7 +319,6 @@
         style.innerHTML = `[data-mode="watch"] #${LOGO_ID} { color: #fff; }
 [data-mode="searching"] #${LOGO_ID}, [data-mode="search"] #${LOGO_ID} { display: none; }
 #${LOGO_ID} { white-space: nowrap; }
-.mobile-topbar-header-sign-in-button { display: none; }
 .ytmusic-nav-bar#left-content #${LOGO_ID} { display: block; }`;
         document.head.appendChild(style);
       };
