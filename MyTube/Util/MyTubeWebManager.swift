@@ -24,7 +24,20 @@ class MyTubeWebManager: ObservableObject {
         checkLoginStatus()
     }
     
-    func createConfiguration(scriptsToInject: [String] = ["AdBlocker", "SponsorBlock", "AgeRestrictBypass", "CustomLayout"]) -> WKWebViewConfiguration {
+    /// Default starting URL: If not logged in, starts with Trending to prevent empty home feed
+    var initialHomeURL: String {
+        return isLoggedIn ? "https://m.youtube.com/" : "https://m.youtube.com/feed/trending"
+    }
+    
+    func createPhoneConfiguration() -> WKWebViewConfiguration {
+        return createBaseConfiguration(extraScripts: [])
+    }
+    
+    func createCarPlayConfiguration() -> WKWebViewConfiguration {
+        return createBaseConfiguration(extraScripts: ["CarPlayLayout"])
+    }
+    
+    private func createBaseConfiguration(extraScripts: [String]) -> WKWebViewConfiguration {
         let config = WKWebViewConfiguration()
         config.processPool = self.processPool
         config.websiteDataStore = self.dataStore
@@ -42,6 +55,7 @@ class MyTubeWebManager: ObservableObject {
         if ageRestrictBypassOn { activeScripts.append("AgeRestrictBypass") }
         if adBlockerOn { activeScripts.append("AdBlocker") }
         activeScripts.append("CustomLayout")
+        activeScripts.append(contentsOf: extraScripts)
         
         for scriptName in activeScripts {
             if let scriptPath = Bundle.main.path(forResource: scriptName, ofType: "js"),
@@ -51,13 +65,13 @@ class MyTubeWebManager: ObservableObject {
             }
         }
         
-        // Zoom and layout settings
+        // Custom Zoom (Default 100% for crisp display)
         let zoomVal = UserDefaults.standard.integer(forKey: "Zoom") == 0 ? 100 : UserDefaults.standard.integer(forKey: "Zoom")
         let zoomScale = Double(zoomVal) / 100.0
         let zoomScript = """
         let meta = document.createElement('meta');
         meta.name = 'viewport';
-        meta.content = 'initial-scale=\(zoomScale), maximum-scale=\(zoomScale), user-scalable=no';
+        meta.content = 'initial-scale=\(zoomScale), maximum-scale=\(zoomScale), user-scalable=yes';
         document.head.appendChild(meta);
         let css = document.createElement('style');
         css.type = 'text/css';

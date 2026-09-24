@@ -12,13 +12,22 @@ struct ContentView: View {
     @Environment(\.scenePhase) private var scenePhase
     
     @State private var selectedTab: Int = 0
-    @State private var webURL: String = "https://m.youtube.com/"
+    @State private var webURL: String = MyTubeWebManager.shared.initialHomeURL
     @State private var canGoBack: Bool = false
     @State private var canGoForward: Bool = false
     @State private var isLoading: Bool = false
     
+    @State private var searchText: String = ""
     @State private var manualURL: String = ""
-    @State private var searchKeyword: String = ""
+    
+    func performSearch() {
+        hideKeyboard()
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return }
+        if let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+            webURL = "https://m.youtube.com/results?search_query=\(encoded)"
+        }
+    }
     
     func playCurrentVideoOnCar() {
         if let videoID = extractYouTubeVideoID(webURL) {
@@ -32,7 +41,7 @@ struct ContentView: View {
         } else {
             UIApplication.shared.alert(
                 title: "Chưa Chọn Video",
-                body: "Hãy chọn một video trên màn hình YouTube hoặc dán link video để phát lên màn hình xe ô tô.",
+                body: "Hãy chạm mở một video trên màn hình hoặc tìm kiếm bài hát rồi bấm 'Lên Xe'.",
                 window: .main
             )
         }
@@ -47,128 +56,164 @@ struct ContentView: View {
             }
         }
     }
+    
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
             
-            // MARK: - TAB 1: YOUTUBE ĐẦY ĐỦ CÓ ĐĂNG NHẬP & ĐỒNG BỘ
+            // MARK: - TAB 1: YOUTUBE ĐẦY ĐỦ CÓ ĐĂNG NHẬP, TÌM KIẾM & THỊNH HÀNH
             VStack(spacing: 0) {
-                // Top Navigation Bar
-                HStack(spacing: 12) {
-                    Button(action: {
-                        // Navigate back inside webview
-                        webURL = "javascript:window.history.back();"
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
-                    .padding(8)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .clipShape(Circle())
-                    
-                    Button(action: {
-                        webURL = "https://m.youtube.com/"
-                    }) {
-                        Image(systemName: "house.fill")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.red)
-                    }
-                    .padding(8)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .clipShape(Circle())
-                    
-                    // Nút Kênh Đăng Ký
-                    Button(action: {
-                        webURL = "https://m.youtube.com/feed/subscriptions"
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "play.rectangle.on.rectangle.fill")
-                            Text("Đăng Ký")
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                
+                // 1. Native Search & Cast Bar (Hỗ trợ bàn phím iOS gõ trực tiếp)
+                HStack(spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.gray)
+                        
+                        TextField("Tìm kiếm bài hát, video trên YouTube...", text: $searchText, onCommit: performSearch)
+                            .font(.system(size: 14))
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                        
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
                         }
-                        .foregroundColor(.primary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(16)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .cornerRadius(12)
                     
-                    // Nút Lịch Sử Xem
-                    Button(action: {
-                        webURL = "https://m.youtube.com/feed/history"
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "clock.arrow.circlepath")
-                            Text("Lịch Sử")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                        }
-                        .foregroundColor(.primary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(UIColor.secondarySystemBackground))
-                        .cornerRadius(16)
-                    }
-                    
-                    Spacer()
-                    
-                    // Nút Phát Lên Xe Ô Tô
+                    // Nút Lên Xe (CarPlay)
                     Button(action: playCurrentVideoOnCar) {
                         HStack(spacing: 4) {
                             Image(systemName: "car.fill")
                             Text("Lên Xe")
-                                .font(.caption)
-                                .fontWeight(.bold)
+                                .font(.system(size: 13, weight: .bold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.red)
-                        .cornerRadius(16)
-                        .shadow(color: Color.red.opacity(0.4), radius: 4, x: 0, y: 2)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.red, Color(red: 0.85, green: 0.0, blue: 0.0)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(12)
+                        .shadow(color: Color.red.opacity(0.35), radius: 4, x: 0, y: 2)
                     }
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.top, 8)
+                .padding(.bottom, 6)
                 .background(Color(UIColor.systemBackground))
                 
-                // Account Sync Banner
-                HStack {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(webManager.isLoggedIn ? Color.green : Color.orange)
-                            .frame(width: 8, height: 8)
-                        Text(webManager.isLoggedIn ? "Đã Đăng Nhập Google (Đang đồng bộ với CarPlay)" : "Chưa Đăng Nhập. Bấm biểu tượng góc phải để đăng nhập")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    Spacer()
-                    if !webManager.isLoggedIn {
+                // 2. Category Quick Filters (Thịnh hành, Âm nhạc, Đăng ký, Lịch sử, Đăng nhập)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            webURL = "https://m.youtube.com/feed/trending"
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "flame.fill")
+                                    .foregroundColor(.orange)
+                                Text("Thịnh Hành")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(14)
+                        }
+                        
+                        Button(action: {
+                            webURL = "https://m.youtube.com/feed/trending?bp=4gINGgt5dG1hX2NoYXJ0cw%3D%3D"
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "music.note")
+                                    .foregroundColor(.pink)
+                                Text("Âm Nhạc")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(14)
+                        }
+                        
+                        Button(action: {
+                            webURL = "https://m.youtube.com/feed/subscriptions"
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "play.rectangle.on.rectangle.fill")
+                                    .foregroundColor(.red)
+                                Text("Kênh Đăng Ký")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(14)
+                        }
+                        
+                        Button(action: {
+                            webURL = "https://m.youtube.com/feed/history"
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .foregroundColor(.blue)
+                                Text("Lịch Sử Xem")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(14)
+                        }
+                        
                         Button(action: {
                             webURL = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https://m.youtube.com/"
                         }) {
-                            Text("Đăng Nhập")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundColor(.red)
+                            HStack(spacing: 4) {
+                                Image(systemName: webManager.isLoggedIn ? "person.crop.circle.badge.checkmark" : "person.crop.circle")
+                                    .foregroundColor(webManager.isLoggedIn ? .green : .primary)
+                                Text(webManager.isLoggedIn ? "Tài Khoản" : "Đăng Nhập")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(webManager.isLoggedIn ? Color.green.opacity(0.15) : Color.red.opacity(0.15))
+                            .cornerRadius(14)
                         }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 6)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 4)
-                .background(Color(UIColor.secondarySystemBackground).opacity(0.6))
+                .background(Color(UIColor.systemBackground))
                 
-                // Main Embedded YouTube WebView
+                Divider()
+                
+                // 3. Embedded YouTube WebView (Chia sẻ cookie trực tiếp với CarPlay)
                 PhoneWebViewRepresentable(
                     currentURL: $webURL,
                     canGoBack: $canGoBack,
                     canGoForward: $canGoForward,
                     isLoading: $isLoading,
-                    onNavigation: { newURL in
-                        // If it's a watch URL, update current state
+                    onNavigation: { _ in
                         webManager.checkLoginStatus()
                     }
                 )
@@ -178,12 +223,11 @@ struct ContentView: View {
             }
             .tag(0)
             
-            // MARK: - TAB 2: ĐIỀU KHIỂN CARPLAY & NHẬP LINK
+            // MARK: - TAB 2: ĐIỀU KHIỂN CARPLAY
             NavigationView {
                 ScrollView {
                     VStack(spacing: 20) {
                         
-                        // Header & Status
                         VStack(spacing: 12) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -225,16 +269,15 @@ struct ContentView: View {
                         }
                         .padding(.top, 10)
 
-                        // Sync Notice
                         HStack(spacing: 12) {
                             Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                                 .font(.title)
                                 .foregroundColor(.green)
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("Đồng Bộ Tài Khoản Tự Động")
+                                Text("Đồng Bộ Tài Khoản & Thịnh Hành")
                                     .font(.subheadline)
                                     .fontWeight(.bold)
-                                Text(webManager.isLoggedIn ? "Tài khoản của bạn đã được kết nối và đồng bộ hoàn toàn với màn hình xe hơi." : "Đăng nhập một lần trên tab YouTube để lịch sử, kênh đăng ký tự động hiện lên màn hình xe.")
+                                Text(webManager.isLoggedIn ? "Tài khoản của bạn đã được kết nối và đồng bộ hoàn toàn với màn hình xe hơi." : "Chưa có lịch sử? My Tube sẽ tự động nạp Video Thịnh Hành (Trending) để bạn xem ngay mà không bị trống màn hình.")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -244,7 +287,6 @@ struct ContentView: View {
                         .cornerRadius(14)
                         .padding(.horizontal)
 
-                        // Manual Link & Search
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Phát Link Thủ Công")
                                 .font(.headline)
@@ -303,7 +345,6 @@ struct ContentView: View {
                         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
                         .padding(.horizontal)
 
-                        // Car In-Screen Remote
                         if carPlay.isCPWindowActive {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Điều Khiển Màn Hình Ô Tô")

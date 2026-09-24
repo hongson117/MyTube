@@ -29,12 +29,12 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
         setupScreenOffLabel()
         setupSplashScreen()
         
-        // Check if there is a pending cached video
+        // Check if there is a pending cached video, otherwise load initial home/trending URL
         if let urlString = CarPlaySingleton.shared.getCachedVideo() {
             CarPlaySingleton.shared.clearCachedVideo()
             loadUrl(urlString)
         } else {
-            goHome()
+            loadUrl(MyTubeWebManager.shared.initialHomeURL)
         }
     }
     
@@ -47,7 +47,7 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     
     // MARK: - Setup Components
     private func setupWebView() {
-        let webConfiguration = MyTubeWebManager.shared.createConfiguration()
+        let webConfiguration = MyTubeWebManager.shared.createCarPlayConfiguration()
         webConfiguration.userContentController.add(self, name: "keyboard")
         
         webView = WKWebView(frame: view.bounds, configuration: webConfiguration)
@@ -157,7 +157,7 @@ class CarPlayViewController: UIViewController, WKNavigationDelegate, WKUIDelegat
     }
     
     func goHome() {
-        loadUrl(YT_HOME)
+        loadUrl(MyTubeWebManager.shared.initialHomeURL)
     }
     
     func goBack() {

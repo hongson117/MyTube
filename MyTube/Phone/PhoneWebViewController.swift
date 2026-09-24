@@ -19,7 +19,7 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
     }
     
     func makeUIView(context: Context) -> WKWebView {
-        let configuration = MyTubeWebManager.shared.createConfiguration()
+        let configuration = MyTubeWebManager.shared.createPhoneConfiguration()
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.customUserAgent = MyTubeWebManager.shared.safariUserAgent
         webView.allowsLinkPreview = false
