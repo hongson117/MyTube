@@ -1,0 +1,46 @@
+name: MyTube
+options:
+  bundleIdPrefix: com.mytube
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    ENABLE_BITCODE: NO
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+    CODE_SIGN_IDENTITY: ""
+    AD_HOC_CODE_SIGNING_ALLOWED: YES
+
+targets:
+  MyTube:
+    type: application
+    platform: iOS
+    sources:
+      - path: MyTube
+        excludes:
+          - "MyTube.entitlements"
+          - "Info.plist"
+    settings:
+      base:
+        PRODUCT_NAME: "My Tube"
+        PRODUCT_BUNDLE_IDENTIFIER: com.mytube.app
+        INFOPLIST_FILE: MyTube/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: MyTube/MyTube.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        OTHER_LDFLAGS:
+          - "-framework"
+          - "WebKit"
+          - "-framework"
+          - "AVFoundation"
+          - "-framework"
+          - "UIKit"
+          - "-framework"
+          - "SwiftUI"
+    entitlements:
+      path: MyTube/MyTube.entitlements
