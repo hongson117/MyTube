@@ -57,6 +57,13 @@ class MyTubeWebManager: ObservableObject {
         activeScripts.append("CustomLayout")
         activeScripts.append(contentsOf: extraScripts)
         
+        // Inject BackgroundPlayback at document start so visibility overrides take effect immediately
+        if let bgScriptPath = Bundle.main.path(forResource: "BackgroundPlayback", ofType: "js"),
+           let bgScriptSource = try? String(contentsOfFile: bgScriptPath) {
+            let bgUserScript = WKUserScript(source: bgScriptSource, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+            config.userContentController.addUserScript(bgUserScript)
+        }
+        
         for scriptName in activeScripts {
             if let scriptPath = Bundle.main.path(forResource: scriptName, ofType: "js"),
                let scriptSource = try? String(contentsOfFile: scriptPath) {

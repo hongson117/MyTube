@@ -421,6 +421,14 @@ struct ContentView: View {
         .onChange(of: scenePhase) { phase in
             if phase == .active {
                 webManager.checkLoginStatus()
+            } else if phase == .background {
+                BackgroundAudioManager.shared.startKeepAlive()
+                BackgroundAudioManager.shared.activeWebView?.evaluateJavaScript("""
+                const v = document.querySelector('video');
+                if (v && !v.ended && v.currentTime > 0) {
+                    v.play();
+                }
+                """, completionHandler: nil)
             }
         }
     }

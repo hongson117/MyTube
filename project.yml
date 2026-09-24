@@ -42,5 +42,7 @@ targets:
           - "UIKit"
           - "-framework"
           - "SwiftUI"
+          - "-framework"
+          - "MediaPlayer"
     entitlements:
       path: MyTube/MyTube.entitlements

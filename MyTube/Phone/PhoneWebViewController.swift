@@ -30,6 +30,9 @@ struct PhoneWebViewRepresentable: UIViewRepresentable {
         context.coordinator.webView = webView
         context.coordinator.lastLoadedURL = currentURL
         
+        BackgroundAudioManager.shared.activeWebView = webView
+        BackgroundAudioManager.shared.startKeepAlive()
+        
         if let url = URL(string: currentURL) {
             webView.load(URLRequest(url: url))
         }

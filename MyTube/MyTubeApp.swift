@@ -45,12 +45,8 @@ struct MyTubeApp: App {
     }
     
     private func configureAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.allowAirPlay, .allowBluetooth, .allowBluetoothA2DP])
-            try AVAudioSession.sharedInstance().setActive(true)
-        } catch {
-            print("AVAudioSession configuration error: \(error)")
-        }
+        BackgroundAudioManager.shared.setupAudioSession()
+        BackgroundAudioManager.shared.startKeepAlive()
     }
     
     private func handleIncomingURL(_ url: URL) {
